@@ -16,12 +16,21 @@ project:
     description: 'ComicMark API: modular monolith on net/http with SQLite'
 
 tasks:
+    # Creates .env with a generated JWT secret on first run, so a fresh checkout
+    # starts without a manual step. It never overwrites an existing file.
+    setup-env:
+        command: 'bash $workspaceRoot/scripts/dev-env.sh'
+        options:
+            cache: false
+            internal: true
+            runFromWorkspaceRoot: true
+
     # Restarts on a Go or SQL edit, and applies migrations so a schema change is
     # picked up without a manual step.
     dev:
         command: 'watchexec -r -e go,sql -w . -- go run ./apps/api'
         args: ['--auto-migrate']
-        deps: ['kill-port', 'tidy']
+        deps: ['setup-env', 'kill-port', 'tidy']
         options:
             cache: false
             envFile: '.env'
@@ -29,7 +38,7 @@ tasks:
     run:
         command: 'go run ./apps/api'
         args: ['--auto-migrate']
-        deps: ['kill-port', 'tidy']
+        deps: ['setup-env', 'kill-port', 'tidy']
         options:
             cache: false
             interactive: true
