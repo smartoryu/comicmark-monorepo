@@ -723,14 +723,6 @@ func wrapNoRows(err error, action string) error {
 	return fmt.Errorf("auth: %s: %w", action, err)
 }
 
-// nullTimeToSQL renders an optional timestamp for storage.
-func nullTimeToSQL(t *time.Time) any {
-	if t == nil {
-		return nil
-	}
-	return formatTime(*t)
-}
-
 // optionalString reads a nullable text column as a pointer.
 func optionalString(ns sql.NullString) *string {
 	if !ns.Valid {

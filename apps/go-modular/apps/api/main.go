@@ -22,6 +22,7 @@ import (
 	"comicmark/go-modular/internal/pkg/jwt"
 	"comicmark/go-modular/internal/pkg/mailer"
 	"comicmark/go-modular/internal/pkg/password"
+	"comicmark/go-modular/internal/pkg/scraper"
 )
 
 // Server timeouts. The write timeout allows for a scrape, which can take up to
@@ -131,7 +132,20 @@ func run() error {
 		return err
 	}
 
-	api, err := newAPIServer(cfg, logger, db, jwtManager, password.NewHasher(), asyncMailer, firebaseVerifier)
+	// The scraper enforces its own destination rules, response cap and timeout.
+	fetcher, err := scraper.New(scraper.Options{
+		UserAgent:  cfg.Scraper.UserAgent,
+		ContactURL: cfg.Scraper.ContactURL,
+		Timeout:    cfg.Scraper.Timeout,
+		MaxBytes:   cfg.Scraper.MaxBytes,
+		Guard:      scraper.NewGuard(scraper.GuardOptions{AllowPrivate: cfg.Scraper.AllowPrivateIPs}),
+		Logger:     logger,
+	})
+	if err != nil {
+		return fmt.Errorf("configure scraper: %w", err)
+	}
+
+	api, err := newAPIServer(cfg, logger, db, jwtManager, password.NewHasher(), asyncMailer, firebaseVerifier, fetcher)
 	if err != nil {
 		return err
 	}
@@ -156,6 +170,7 @@ func run() error {
 		"base_url", cfg.App.BaseURL,
 		"require_email_verification", cfg.App.RequireEmailVerification,
 		"firebase_enabled", cfg.FirebaseEnabled(),
+		"scraper_allow_private_ips", cfg.Scraper.AllowPrivateIPs,
 		"cors_origins", cfg.App.CORSOrigins,
 	)
 

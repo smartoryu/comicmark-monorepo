@@ -19,6 +19,7 @@ import (
 	"comicmark/go-modular/internal/pkg/jwt"
 	"comicmark/go-modular/internal/pkg/mailer"
 	"comicmark/go-modular/internal/pkg/password"
+	"comicmark/go-modular/internal/pkg/scraper"
 )
 
 // testSecret is long enough to satisfy jwt.MinSecretLength.
@@ -142,7 +143,7 @@ func newTestServerWithConfig(t *testing.T, adjust func(*config.Config), m mailer
 	}
 
 	db := newTestDB(t)
-	srv, err := newAPIServer(cfg, discardLogger(), db, testJWTManager(t), testHasher(), m, nil)
+	srv, err := newAPIServer(cfg, discardLogger(), db, testJWTManager(t), testHasher(), m, nil, testFetcher(t))
 	require.NoError(t, err)
 	t.Cleanup(srv.close)
 	return srv
@@ -159,6 +160,43 @@ func newTestDB(t *testing.T) *sql.DB {
 	_, err = database.NewMigrator(db).Up(context.Background())
 	require.NoError(t, err)
 	return db
+}
+
+// stubFetcher stands in for the scraper in tests that are not about scraping.
+// It reports a page it never fetched, so the bookmark endpoints can be exercised
+// without a network.
+type stubFetcher struct {
+	result  *scraper.Result
+	err     error
+	lastURL string
+}
+
+func (f *stubFetcher) Fetch(_ context.Context, rawURL string) (*scraper.Result, error) {
+	f.lastURL = rawURL
+	if f.err != nil {
+		return nil, f.err
+	}
+	if f.result != nil {
+		return f.result, nil
+	}
+	return &scraper.Result{
+		FinalURL: rawURL,
+		Title:    "Stubbed Comic",
+		CoverURL: "https://cdn.example.com/cover.jpg",
+		Chapter: scraper.Chapter{
+			Text:   "Chapter 1050",
+			Number: floatPointer(1050),
+			Source: scraper.SourceSlug,
+		},
+	}, nil
+}
+
+func floatPointer(value float64) *float64 { return &value }
+
+// testFetcher returns a fetcher that answers without touching the network.
+func testFetcher(t *testing.T) *stubFetcher {
+	t.Helper()
+	return &stubFetcher{}
 }
 
 // testMailer returns a console mailer whose output is discarded.

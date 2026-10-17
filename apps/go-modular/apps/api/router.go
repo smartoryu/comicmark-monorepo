@@ -8,6 +8,7 @@ import (
 	"comicmark/go-modular/internal/config"
 	"comicmark/go-modular/internal/httpx"
 	"comicmark/go-modular/internal/modules/auth"
+	"comicmark/go-modular/internal/modules/bookmark"
 	"comicmark/go-modular/internal/pkg/jwt"
 	"comicmark/go-modular/internal/pkg/mailer"
 	"comicmark/go-modular/internal/pkg/password"
@@ -26,7 +27,8 @@ type apiServer struct {
 
 	// auth and bookmarks are the mounted feature modules. A nil module is
 	// simply not mounted.
-	auth *auth.Module
+	auth      *auth.Module
+	bookmarks *bookmark.Module
 
 	// globalLimiter is the coarse per-client limit applied to every request.
 	globalLimiter *httpx.RateLimiter
@@ -48,6 +50,7 @@ func newAPIServer(
 	passwords *password.Hasher,
 	mailerDriver mailer.AsyncMailer,
 	firebaseVerifier auth.FirebaseVerifier,
+	fetcher bookmark.Fetcher,
 ) (*apiServer, error) {
 	static, err := newStaticHandler()
 	if err != nil {
@@ -91,6 +94,18 @@ func newAPIServer(
 	}
 	server.auth = authModule
 
+	bookmarks, err := bookmark.New(bookmark.Deps{
+		Config:      cfg,
+		Logger:      logger,
+		DB:          db,
+		Fetcher:     fetcher,
+		RequireAuth: authModule.RequireAuth,
+	})
+	if err != nil {
+		return nil, err
+	}
+	server.bookmarks = bookmarks
+
 	return server, nil
 }
 
@@ -115,6 +130,9 @@ func (s *apiServer) registerCoreRoutes(mux *http.ServeMux) {
 func (s *apiServer) registerModuleRoutes(mux *http.ServeMux) {
 	if s.auth != nil {
 		s.auth.RegisterRoutes(mux)
+	}
+	if s.bookmarks != nil {
+		s.bookmarks.RegisterRoutes(mux)
 	}
 }
 

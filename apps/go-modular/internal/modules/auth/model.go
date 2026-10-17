@@ -10,8 +10,9 @@ package auth
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"time"
+
+	"comicmark/go-modular/internal/pkg/sqltime"
 )
 
 // Identity providers recorded in auth_identities.
@@ -105,25 +106,16 @@ func newFieldError(field, message string, cause error) *FieldError {
 	return &FieldError{Field: field, Message: message, cause: cause}
 }
 
-// timeFormat is RFC 3339 with milliseconds and a fixed width.
-//
-// Timestamps round-trip through SQLite as TEXT and are compared
-// lexicographically, so the layout must be fixed width. time.RFC3339Nano is not
-// usable here: it drops trailing zeros, which makes "…:00Z" sort after
-// "…:00.5Z".
-const timeFormat = "2006-01-02T15:04:05.000Z07:00"
+// Timestamps are stored through the shared sqltime encoding, so both feature
+// modules agree on the format. These wrappers keep the call sites in this package
+// terse.
+func formatTime(t time.Time) string { return sqltime.Format(t) }
 
-// formatTime renders a timestamp for storage.
-func formatTime(t time.Time) string { return t.UTC().Format(timeFormat) }
+func parseTime(s string) (time.Time, error) { return sqltime.Parse(s) }
 
-// parseTime reads a stored timestamp.
-func parseTime(s string) (time.Time, error) {
-	t, err := time.Parse(timeFormat, s)
-	if err != nil {
-		return time.Time{}, fmt.Errorf("auth: parse time %q: %w", s, err)
-	}
-	return t.UTC(), nil
-}
+func nullTimeToSQL(t *time.Time) any { return sqltime.Null(t) }
+
+func nullableTime(ns sql.NullString) (*time.Time, error) { return sqltime.ParseNull(ns) }
 
 // nullString converts an empty string to SQL NULL. Optional text columns treat
 // "" and NULL as the same thing, which keeps comparisons and uniqueness sane.
@@ -136,18 +128,6 @@ func nullString(s string) any {
 
 // stringOrEmpty reads a nullable text column.
 func stringOrEmpty(ns sql.NullString) string { return ns.String }
-
-// nullableTime reads a nullable timestamp column.
-func nullableTime(ns sql.NullString) (*time.Time, error) {
-	if !ns.Valid || ns.String == "" {
-		return nil, nil
-	}
-	t, err := parseTime(ns.String)
-	if err != nil {
-		return nil, err
-	}
-	return &t, nil
-}
 
 // User is an account.
 type User struct {
