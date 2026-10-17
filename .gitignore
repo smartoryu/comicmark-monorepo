@@ -135,3 +135,10 @@ TODO.md
 
 # Expo
 .expo
+
+# ComicMark
+# SQLite files live here; the directory itself is created on first run.
+apps/go-modular/data/
+# The global `testdata/` ignore above would hide Go test fixtures, which are
+# source files for this project.
+!apps/go-modular/**/testdata/

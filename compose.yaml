@@ -1,13 +1,14 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
 
 # This compose.yaml defines services for your development environment.
-# By default, only Postgres and Mailpit are enabled. Uncomment other services as needed.
+# ComicMark stores data in SQLite (no Postgres), so only Mailpit is enabled by default.
 
 # Enabled by default:
-# - Postgres (5432): Relational database.
-# - Mailpit (1025, 8025): Local email testing tool.
+# - Mailpit (1025, 8025): Local email testing tool. ComicMark's `smtp` mailer driver
+#   targets it, and the UI on http://localhost:8025 shows verification / password-reset mail.
 
 # Optional services (uncomment to enable):
+# - Postgres (5432): Not used by ComicMark (SQLite instead), kept for reference.
 # - MinIO (9100, 9101, 8010): S3-compatible object storage.
 # - ClickHouse (8123, 9000): Columnar database for analytics.
 # - Redis (6379): In-memory cache and message broker.
@@ -29,7 +30,7 @@ networks:
 # @see: https://docs.docker.com/compose/how-tos/multiple-compose-files/include/
 
 include:
-    - ./docker/_stacks_/postgres.yaml # 5432
+    # - ./docker/_stacks_/postgres.yaml         # 5432  (unused: ComicMark uses SQLite)
     - ./docker/_stacks_/mailpit.yaml # 1025,8025
     - ./docker/_stacks_/instrumentation.yaml # 6831,6832,5778,16686,14268,14250,4317
     # - ./docker/_stacks_/minio.yaml              # 9100,9101,8010

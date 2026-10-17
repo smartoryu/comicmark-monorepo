@@ -1,0 +1,13 @@
+{{.AppName}} — confirm your email address
+
+Hi {{.DisplayName}},
+
+Confirm {{.Email}} to finish setting up your {{.AppName}} account.
+You will not be able to sign in until it is confirmed.
+
+Confirm your email address:
+{{.Link}}
+
+This link expires in {{.ExpiresIn}}.
+
+If you did not create a {{.AppName}} account, you can ignore this email.
