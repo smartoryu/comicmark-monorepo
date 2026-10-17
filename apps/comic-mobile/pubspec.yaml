@@ -13,6 +13,10 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Material and Cupertino glyphs. Listed explicitly so the icon tree-shaker can
+  # resolve every family that a dependency references.
+  cupertino_icons: ^1.0.8
+
   # State management. Riverpod 3 with plain Notifier/AsyncNotifier classes:
   # no code generation, so there is no build_runner step between an edit and a
   # run.

@@ -36,15 +36,26 @@ const String firebaseProjectId = String.fromEnvironment('FIREBASE_PROJECT_ID');
 const String firebaseApiKey = String.fromEnvironment('FIREBASE_API_KEY');
 const String firebaseAuthDomain = String.fromEnvironment('FIREBASE_AUTH_DOMAIN');
 const String firebaseAppId = String.fromEnvironment('FIREBASE_APP_ID');
+const String firebaseMessagingSenderId =
+    String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID');
+
+// Google sign-in needs a client id per platform. On Android the ID token has to
+// be requested on behalf of a server (web) client, and on iOS the plugin reads
+// its client id from the GoogleService-Info.plist unless one is given here.
+const String googleServerClientId =
+    String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
+const String googleIosClientId = String.fromEnvironment('GOOGLE_IOS_CLIENT_ID');
 
 /// Whether the build carries enough Firebase configuration to initialise.
 ///
-/// Project id, API key and app id are the minimum the SDK needs. Auth domain is
-/// only used for the web popup flow, so it is not required here.
+/// `messagingSenderId` is required by the SDK's options even though the app never
+/// sends messages, so a build without it cannot initialise at all and is treated
+/// as unconfigured.
 bool get firebaseConfigured =>
     firebaseProjectId.isNotEmpty &&
     firebaseApiKey.isNotEmpty &&
-    firebaseAppId.isNotEmpty;
+    firebaseAppId.isNotEmpty &&
+    firebaseMessagingSenderId.isNotEmpty;
 
 /// Whether requests go to the same origin that served the app.
 bool get usesSameOrigin => apiBaseUrl.isEmpty;
