@@ -1,0 +1,70 @@
+{
+    "oxc.enable": true,
+    "editor.defaultFormatter": "oxc.oxc-vscode",
+    "files.associations": {
+        "*.css": "css",
+        "*.toml.example": "toml",
+        "*.yml.example": "yaml"
+    },
+    "go.toolsEnvVars": {
+        "GOFLAGS": "-tags=prod,debug"
+    },
+    "gopls": {
+        "buildFlags": ["-tags=prod,debug"]
+    },
+    "go.formatTool": "gofmt",
+    "go.lintTool": "golangci-lint",
+    "go.lintOnSave": "package",
+    "search.exclude": {
+        "**/.husky": true,
+        "**/.output": true,
+        "**/.next": true,
+        "**/build": true,
+        "**/dist": true
+    },
+    "tailwindCSS.experimental.classRegex": [
+        // @ref: https://www.tailwind-variants.org/docs/getting-started
+        // @ref: https://github.com/paolotiu/tailwind-intellisense-regex-list
+        ["(?:cn|cx|cva|clx|tv)\\(([^;]*)[\\);]", "[`'\"`]([^'\"`;]*)[`'\"`]"],
+        ["classList={{([^;]*)}}", "\\s*?[\"'`]([^\"'`]*).*?:"]
+    ],
+    "tailwindCSS.files.exclude": ["**/.github/**", "**/*.{md,js,ts,json}"],
+    "[astro]": {
+        "editor.defaultFormatter": "oxc.oxc-vscode"
+    },
+    "[css]": {
+        "editor.defaultFormatter": "oxc.oxc-vscode"
+    },
+    "[dockerfile]": {
+        "editor.defaultFormatter": "docker.docker"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "oxc.oxc-vscode"
+    },
+    "[jsonc]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "[markdown]": {
+        "editor.defaultFormatter": "darkriszty.markdown-table-prettify"
+    },
+    "[go]": {
+        "editor.defaultFormatter": "golang.go",
+        "editor.formatOnSave": true
+    },
+    "[toml]": {
+        "editor.defaultFormatter": "Shellomo.enhanced-toml",
+        "editor.formatOnSave": false
+    },
+    "[tailwindcss]": {
+        "editor.defaultFormatter": "oxc.oxc-vscode"
+    },
+    "[typescript][typescriptreact][javascript]": {
+        "editor.formatOnPaste": true,
+        "editor.formatOnSave": true,
+        "editor.formatOnSaveMode": "file",
+        "editor.defaultFormatter": "oxc.oxc-vscode",
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit"
+        }
+    }
+}

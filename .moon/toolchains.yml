@@ -1,0 +1,34 @@
+# https://moonrepo.dev/docs/config/toolchain
+# yaml-language-server: $schema=https://moonrepo.dev/schemas/v2/toolchains.json
+$schema: 'https://moonrepo.dev/schemas/v2/toolchains.json'
+
+proto:
+  version: 0.61.1
+
+go:
+  version: '1.27.0'
+  installDependencies: true
+
+node:
+  version: '24.19'
+  installDependencies: true
+
+javascript:
+  packageManager: pnpm                      # Defines which package manager to utilize.
+  inferTasksFromScripts: true               # Automatically infer moon tasks from `package.json` scripts.
+  dedupeOnLockfileChange: false             # Dedupe dependencies after the lockfile has changed, keep the workspace tree as clean and lean as possible.
+  syncPackageManagerField: true             # Sync the currently configured package manager and its version to the packageManager field in the root package.json.
+  rootPackageDependenciesOnly: false        # Single version policy patterns by only allowing dependencies in the root `package.json`.
+  syncProjectWorkspaceDependencies: true    # Sync a project's `dependsOn` as dependencies within the project's `package.json`.
+  dependencyVersionFormat: workspace        # Uses workspace:*, which resolves to "1.2.3". Requires package workspaces.
+
+pnpm:
+  version: 11.23.0
+
+unstable_python:
+  version: '3.14'
+  installDependencies: true
+  packageManager: 'uv'
+
+unstable_uv:
+  version: 0.8.17

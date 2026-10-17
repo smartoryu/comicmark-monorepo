@@ -1,0 +1,70 @@
+# https://moonrepo.dev/docs/config/workspace
+# yaml-language-server: $schema=https://moonrepo.dev/schemas/v2/workspace.json
+$schema: 'https://moonrepo.dev/schemas/v2/workspace.json'
+
+# Require a specific version of moon while running commands, otherwise fail.
+versionConstraint: '>=2.5.3'
+
+vcs:
+  client: git
+  provider: gitlab
+  defaultBranch: main
+  # @see: https://moonrepo.dev/docs/config/workspace#hooks
+  hooks:
+    pre-commit:
+      - moon run :lint --affected --status=staged
+      - moon run :format --affected --status=all
+    commit-msg:
+      - 'if ! grep -qE "^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)(\(.+\))?!?: .+" "$1"; then echo ""; echo "ERROR: Invalid commit message format."; echo "Expected: <type>(<optional-scope>): <description>"; echo "Types: feat, fix, chore, docs, style, refactor, perf, test, build, ci, revert"; echo ""; exit 1; fi'
+  sync: true
+
+hasher:
+  optimization: performance
+telemetry: false
+pipeline:
+  cacheLifetime: 12 hours
+
+docker:
+  scaffold:
+    configsPhaseGlobs:
+      - '**/.npmrc'
+      - '**/package.json'
+  prune:
+    deleteVendorDirectories: false
+    installToolchainDependencies: true
+
+# REQUIRED: A map of all projects found within the workspace, or a list or file system globs.
+# When using a map, each entry requires a unique project ID as the map key, and a file system
+# path to the project folder as the map value. File paths are relative from the workspace root,
+# and cannot reference projects located outside the workspace boundary.
+projects:
+  globs:
+    - 'apps/*'
+    - 'infra/*'
+    - 'packages/*'
+
+# Monorepo package templates to use when generating new projects.
+# @see: https://moonrepo.dev/docs/config/workspace#templates
+generator:
+  templates:
+    - 'https://oss.zero-one-group.com/monorepo/templates/ansible.zip'
+    - 'https://oss.zero-one-group.com/monorepo/templates/astro.zip'
+    - 'https://oss.zero-one-group.com/monorepo/templates/expo.zip'
+    - 'https://oss.zero-one-group.com/monorepo/templates/fastapi-ai.zip'
+    - 'https://oss.zero-one-group.com/monorepo/templates/gitlab-cicd.zip'
+    - 'https://oss.zero-one-group.com/monorepo/templates/go-clean.zip'
+    - 'https://oss.zero-one-group.com/monorepo/templates/go-modular.zip'
+    - 'https://oss.zero-one-group.com/monorepo/templates/load-balancer.zip'
+    - 'https://oss.zero-one-group.com/monorepo/templates/monitoring.zip'
+    - 'https://oss.zero-one-group.com/monorepo/templates/nextjs.zip'
+    - 'https://oss.zero-one-group.com/monorepo/templates/phoenix.zip'
+    - 'https://oss.zero-one-group.com/monorepo/templates/postgresql.zip'
+    - 'https://oss.zero-one-group.com/monorepo/templates/react-app.zip'
+    - 'https://oss.zero-one-group.com/monorepo/templates/tanstack-start.zip'
+    - 'https://oss.zero-one-group.com/monorepo/templates/shared-ui.zip'
+    - 'https://oss.zero-one-group.com/monorepo/templates/squidproxy.zip'
+    - 'https://oss.zero-one-group.com/monorepo/templates/strapi.zip'
+    - 'https://oss.zero-one-group.com/monorepo/templates/swarm.zip'
+    - 'https://oss.zero-one-group.com/monorepo/templates/terragrunt.zip'
+    # Uncomment to enable local templates or debug custom templates.
+    # - './templates'
