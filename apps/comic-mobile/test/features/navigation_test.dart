@@ -108,7 +108,20 @@ void main() {
       final container = testContainer(api);
       await tester.runAsync(() => signIn(container, api));
       api.on('GET', '/bookmarks', libraryReply([bookmarkJson(coverUrl: null)]));
-      api.on('GET', '/auth/sessions', RouteReply.ok({'sessions': <Object?>[]}));
+      // One device, so the sessions screen renders its list rather than its
+      // empty state: the assertion below is about the header it shows.
+      api.on('GET', '/auth/sessions', RouteReply.ok({
+        'sessions': [
+          {
+            'id': 'session-1',
+            'device_label': 'Chrome on macOS',
+            'platform': 'web',
+            'current': true,
+            'last_seen_at': DateTime.now().toUtc().toIso8601String(),
+            'created_at': '2026-01-01T00:00:00.000Z',
+          },
+        ],
+      }));
 
       await tester.pumpWidget(
         UncontrolledProviderScope(

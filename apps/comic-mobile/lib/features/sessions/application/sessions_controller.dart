@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/retry.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../auth/models/auth_user.dart';
 
@@ -11,6 +12,7 @@ import '../../auth/models/auth_user.dart';
 final sessionsControllerProvider =
     AsyncNotifierProvider<SessionsController, List<DeviceSession>>(
   SessionsController.new,
+  retry: apiRetry,
 );
 
 class SessionsController extends AsyncNotifier<List<DeviceSession>> {

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/api_error.dart';
+import '../../../core/retry.dart';
 import '../../auth/application/auth_controller.dart';
 import '../data/bookmark_repository.dart';
 import '../models/bookmark.dart';
@@ -72,22 +73,31 @@ final libraryFilterProvider =
 /// reader's library is tens of items, and holding it whole is what makes the +1
 /// optimistic update simple, since the item can be replaced by identity.
 final libraryControllerProvider =
-    AsyncNotifierProvider<LibraryController, List<Bookmark>>(LibraryController.new);
+    AsyncNotifierProvider<LibraryController, List<Bookmark>>(
+  LibraryController.new,
+  retry: apiRetry,
+);
 
 class LibraryController extends AsyncNotifier<List<Bookmark>> {
   @override
   Future<List<Bookmark>> build() async {
-    // Rebuild whenever the session changes: signing in loads the library, and
-    // signing out empties it rather than leaving another reader's bookmarks on
-    // screen.
+    // Every dependency is read before the first await. Watching after an await
+    // is not supported: the element may already have been rebuilt, and in
+    // practice it makes a failed build re-run forever, which shows a permanent
+    // spinner and re-requests on every frame instead of surfacing the error.
+    //
+    // The session is watched because signing in loads the library and signing
+    // out empties it, rather than leaving another reader's bookmarks on screen.
     final user = ref.watch(authControllerProvider).value;
+    final filter = ref.watch(libraryFilterProvider);
+    final repository = ref.watch(bookmarkRepositoryProvider);
+
     if (user == null) return const [];
 
-    final filter = ref.watch(libraryFilterProvider);
-    final page = await ref.watch(bookmarkRepositoryProvider).list(
-          status: filter.status,
-          query: filter.query,
-        );
+    final page = await repository.list(
+      status: filter.status,
+      query: filter.query,
+    );
     return page.bookmarks;
   }
 
@@ -99,10 +109,12 @@ class LibraryController extends AsyncNotifier<List<Bookmark>> {
 
   Future<List<Bookmark>> _fetch() async {
     final filter = ref.read(libraryFilterProvider);
-    final page = await ref.read(bookmarkRepositoryProvider).list(
-          status: filter.status,
-          query: filter.query,
-        );
+    final repository = ref.read(bookmarkRepositoryProvider);
+
+    final page = await repository.list(
+      status: filter.status,
+      query: filter.query,
+    );
     return page.bookmarks;
   }
 

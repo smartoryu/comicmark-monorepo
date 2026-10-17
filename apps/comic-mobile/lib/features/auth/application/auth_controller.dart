@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/env.dart';
 import '../../../app/providers.dart';
 import '../../../core/api_error.dart';
+import '../../../core/retry.dart';
 import '../data/auth_repository.dart';
 import '../models/auth_user.dart';
 
@@ -12,15 +13,18 @@ final authRepositoryProvider = Provider<AuthRepository>(
 );
 
 /// Which sign-in methods the API offers, fetched once.
-final authProvidersProvider = FutureProvider<AuthProviders>((ref) async {
-  try {
-    return await ref.watch(authRepositoryProvider).providers();
-  } on ApiError {
-    // The sign-in screen must still render if this call fails, and email and
-    // password is the safe assumption: it is the method that always exists.
-    return AuthProviders.fallback;
-  }
-});
+final authProvidersProvider = FutureProvider<AuthProviders>(
+  (ref) async {
+    try {
+      return await ref.watch(authRepositoryProvider).providers();
+    } on ApiError {
+      // The sign-in screen must still render if this call fails, and email and
+      // password is the safe assumption: it is the method that always exists.
+      return AuthProviders.fallback;
+    }
+  },
+  retry: apiRetry,
+);
 
 /// The signed-in account, or null when nobody is signed in.
 ///

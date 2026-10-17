@@ -50,6 +50,21 @@ class SessionsPage extends ConsumerWidget {
   }
 
   Widget _list(BuildContext context, WidgetRef ref, List<DeviceSession> sessions) {
+    // Not reachable through normal use, because the device making the request is
+    // always in its own list. Showing something deliberate beats showing a header
+    // that says "signed in on 0 devices".
+    if (sessions.isEmpty) {
+      return EmptyState(
+        icon: Icons.devices_other_outlined,
+        title: 'No active devices',
+        message: 'Nothing is signed in to this account right now.',
+        action: FilledButton(
+          onPressed: () => ref.read(sessionsControllerProvider.notifier).reload(),
+          child: const Text('Check again'),
+        ),
+      );
+    }
+
     final others = sessions.where((session) => !session.current).length;
 
     return ListView(
