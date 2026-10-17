@@ -1,24 +1,23 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/main/schema/compose-spec.json
 
-# This compose.yaml defines services for your development environment.
-# ComicMark stores data in SQLite (no Postgres), so only Mailpit is enabled by default.
-
-# Enabled by default:
-# - Mailpit (1025, 8025): Local email testing tool. ComicMark's `smtp` mailer driver
-#   targets it, and the UI on http://localhost:8025 shows verification / password-reset mail.
-
-# Optional services (uncomment to enable):
-# - Postgres (5432): Not used by ComicMark (SQLite instead), kept for reference.
-# - MinIO (9100, 9101, 8010): S3-compatible object storage.
-# - ClickHouse (8123, 9000): Columnar database for analytics.
-# - Redis (6379): In-memory cache and message broker.
-
-# See the `docker/_stacks_` directory for individual service configurations.
-
+# Development services for ComicMark.
+#
+# Only what this project actually uses is here:
+#
+#   - Mailpit (1025, 8025): local email testing. The `smtp` mailer driver targets
+#     it, and http://localhost:8025 shows the verification and password-reset mail.
+#   - Jaeger (16686, 4317): trace collection for the instrumented build.
+#
+# ComicMark stores its data in SQLite, so there is no database container, and it
+# has no object storage, cache or columnar analytics to run. The organisational
+# template this repository was generated from ships stacks for those
+# (postgresql, minio, redis, clickhouse) at
+# https://oss.zero-one-group.com/monorepo/templates — they were removed here
+# because they were unused and they carried hard-coded development passwords.
+#
 # Usage:
-# 1. Uncomment desired services in the `include` section.
-# 2. Start services: `docker compose up -d --remove-orphans`
-# 3. Stop services: `docker compose down --remove-orphans`
+#   pnpm run compose:up      # start
+#   pnpm run compose:down    # stop
 
 name: comicmark-monorepo
 
@@ -30,9 +29,5 @@ networks:
 # @see: https://docs.docker.com/compose/how-tos/multiple-compose-files/include/
 
 include:
-    # - ./docker/_stacks_/postgres.yaml         # 5432  (unused: ComicMark uses SQLite)
-    - ./docker/_stacks_/mailpit.yaml # 1025,8025
+    - ./docker/_stacks_/mailpit.yaml # 1025, 8025
     - ./docker/_stacks_/instrumentation.yaml # 6831,6832,5778,16686,14268,14250,4317
-    # - ./docker/_stacks_/minio.yaml              # 9100,9101,8010
-    # - ./docker/_stacks_/clickhouse.yaml         # 8123,9000
-    # - ./docker/_stacks_/redis.yaml              # 6379

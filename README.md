@@ -143,6 +143,32 @@ scrape a fixture on loopback. **Configuration refuses the flag outright when
 
 ---
 
+## Secrets
+
+Nothing secret is committed, and nothing credential-bearing is in this
+repository's history.
+
+- **Local configuration lives in `apps/go-modular/.env`**, which is gitignored and
+  generated with a fresh `JWT_SECRET` on first run. `.env.example` documents every
+  setting and contains no values.
+- **No credentials are baked into the source.** Firebase configuration is passed at
+  build time with `--dart-define`; a Firebase web API key is a public identifier
+  rather than a secret, and no service-account file is stored here.
+- **`SMTP_PASSWORD` and the SMTP settings** come from the environment. Mailpit,
+  the local mail catcher, needs no credentials at all.
+- The organisational template's Postgres, MinIO, Redis and ClickHouse stacks were
+  **removed** rather than configured: ComicMark uses SQLite and has no object
+  storage, cache or analytics to run, and those stacks shipped hard-coded
+  development passwords. They can be restored from
+  <https://oss.zero-one-group.com/monorepo/templates> if one is ever needed, at
+  which point their credentials belong in the environment.
+
+A deployment is expected to supply `JWT_SECRET`, `DATABASE_PATH` and any mail or
+Firebase settings through its own environment; the API refuses to start without a
+secret rather than falling back to a default.
+
+---
+
 ## Google sign-in (optional)
 
 ComicMark works without it. The feature is designed to be *absent* rather than
