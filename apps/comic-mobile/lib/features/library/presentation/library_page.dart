@@ -45,7 +45,7 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
             IconButton(
               tooltip: 'Settings',
               icon: const Icon(Icons.settings_outlined),
-              onPressed: () => context.go(Routes.settings),
+              onPressed: () => context.push(Routes.settings),
             ),
         ],
       ),
@@ -78,12 +78,12 @@ class _LibraryPageState extends ConsumerState<LibraryPage> {
         mainAxisSize: MainAxisSize.min,
         children: [
           FilledButton(
-            onPressed: () => context.go(Routes.login),
+            onPressed: () => context.push(Routes.login),
             child: const Text('Sign in'),
           ),
           const SizedBox(height: 8),
           TextButton(
-            onPressed: () => context.go(Routes.register),
+            onPressed: () => context.push(Routes.register),
             child: const Text('Create an account'),
           ),
         ],

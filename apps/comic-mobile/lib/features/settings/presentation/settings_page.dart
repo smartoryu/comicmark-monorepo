@@ -87,14 +87,14 @@ class SettingsPage extends ConsumerWidget {
             title: const Text('Devices & sessions'),
             subtitle: const Text('See where you are signed in, and sign devices out'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.go(Routes.sessions),
+            onTap: () => context.push(Routes.sessions),
           ),
           ListTile(
             leading: const Icon(Icons.help_outline),
             title: const Text('Forgot your password?'),
             subtitle: const Text('Reset it and sign every device out'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.go(Routes.forgotPassword),
+            onTap: () => context.push(Routes.forgotPassword),
           ),
 
           const Divider(height: 24),

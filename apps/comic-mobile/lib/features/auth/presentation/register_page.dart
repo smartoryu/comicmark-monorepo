@@ -144,7 +144,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               children: [
                 const Text('Already have an account?'),
                 TextButton(
-                  onPressed: _busy ? null : () => context.go(Routes.login),
+                  onPressed: _busy ? null : () => context.push(Routes.login),
                   child: const Text('Sign in'),
                 ),
               ],
