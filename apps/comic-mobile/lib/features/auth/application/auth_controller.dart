@@ -38,11 +38,6 @@ class AuthController extends AsyncNotifier<AuthUser?> {
   Future<AuthUser?> build() async {
     final client = ref.watch(apiClientProvider);
 
-    // Let the HTTP layer report an unusable session back to us. This is how a
-    // rejected refresh token turns into "the reader is signed out" rather than a
-    // stream of failed requests.
-    ref.read(sessionExpiredHandlerProvider.notifier).install(_onSessionExpired);
-
     await client.restoreSession();
     if (!await client.hasSession()) return null;
 
@@ -160,7 +155,10 @@ class AuthController extends AsyncNotifier<AuthUser?> {
   }
 
   /// Called by the HTTP layer when the refresh token is no longer usable.
-  Future<void> _onSessionExpired() async {
+  ///
+  /// This is how a rejected refresh token becomes "the reader is signed out"
+  /// rather than a stream of failed requests.
+  Future<void> handleSessionExpired() async {
     // The HTTP layer can report this from several failing requests at once, and
     // the reader only needs to be told once per signed-out period.
     if (_sessionExpiredHandled) return;
