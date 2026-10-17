@@ -142,3 +142,16 @@ apps/go-modular/data/
 # The global `testdata/` ignore above would hide Go test fixtures, which are
 # source files for this project.
 !apps/go-modular/**/testdata/
+
+# Flutter / Dart
+apps/comic-mobile/.dart_tool/
+apps/comic-mobile/build/
+apps/comic-mobile/.flutter-plugins
+apps/comic-mobile/.flutter-plugins-dependencies
+apps/comic-mobile/android/.gradle/
+apps/comic-mobile/android/local.properties
+apps/comic-mobile/ios/Pods/
+apps/comic-mobile/ios/.symlinks/
+apps/comic-mobile/ios/Flutter/ephemeral/
+apps/comic-mobile/web/flutter_service_worker.js
+*.iml

@@ -1,0 +1,99 @@
+# https://moonrepo.dev/docs/config/project
+# yaml-language-server: $schema=https://moonrepo.dev/schemas/v2/project.json
+$schema: 'https://moonrepo.dev/schemas/v2/project.json'
+
+layer: application
+stack: frontend
+# moon has no Dart or Flutter toolchain, so every task runs against the Flutter
+# on PATH. Setting toolchains.default to null stops moon from trying to inject
+# a Node or Go environment into a Dart build.
+toolchains:
+    default: null
+tags: ['app', 'mobile', 'web']
+
+project:
+    title: 'comic-mobile'
+    description: 'ComicMark Flutter app for Android, iOS and the web'
+
+tasks:
+    pub-get:
+        command: 'flutter pub get'
+        toolchain: 'system'
+
+    analyze:
+        command: 'flutter analyze'
+        toolchain: 'system'
+        deps: ['pub-get']
+
+    format:
+        command: 'dart format lib test'
+        toolchain: 'system'
+        options:
+            cache: false
+
+    test:
+        command: 'flutter test'
+        toolchain: 'system'
+        deps: ['pub-get']
+        options:
+            cache: false
+
+    # Development against the API on another port, which is why the API needs
+    # CORS_ORIGINS=http://localhost:5173.
+    web:
+        command: 'flutter run -d chrome --web-port=5173'
+        args:
+            - '--dart-define=API_BASE_URL=http://localhost:8080'
+        toolchain: 'system'
+        options:
+            cache: false
+            interactive: true
+            envFile: '.env'
+
+    # 10.0.2.2 is the host loopback as seen from an Android emulator.
+    android:
+        command: 'flutter run'
+        args:
+            - '-d'
+            - 'android'
+            - '--dart-define=API_BASE_URL=http://10.0.2.2:8080'
+        toolchain: 'system'
+        options:
+            cache: false
+            interactive: true
+
+    ios:
+        command: 'flutter run'
+        args:
+            - '-d'
+            - 'ios'
+            - '--dart-define=API_BASE_URL=http://localhost:8080'
+        toolchain: 'system'
+        options:
+            cache: false
+            interactive: true
+
+    # A release build with no API_BASE_URL, so requests go to the same origin
+    # that served the app. --no-web-resources-cdn keeps CanvasKit inside the
+    # bundle, which is what makes the Go binary self-contained.
+    web-build:
+        command: 'flutter build web --release --no-web-resources-cdn'
+        toolchain: 'system'
+        deps: ['pub-get']
+        options:
+            cache: false
+
+    # Copies the web build into the API's embedded static directory so
+    # `moon run go-modular:dev` serves the app and the API from one origin.
+    web-embed:
+        script: |
+            flutter build web --release --no-web-resources-cdn
+            rm -rf $workspaceRoot/apps/go-modular/apps/api/web/static
+            mkdir -p $workspaceRoot/apps/go-modular/apps/api/web/static
+            cp -r build/web/. $workspaceRoot/apps/go-modular/apps/api/web/static/
+            echo "Embedded $(find $workspaceRoot/apps/go-modular/apps/api/web/static -type f | wc -l | tr -d ' ') files"
+        toolchain: 'system'
+        deps: ['pub-get']
+        options:
+            cache: false
+            shell: true

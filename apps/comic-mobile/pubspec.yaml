@@ -1,0 +1,57 @@
+name: comicmark
+description: "ComicMark — keep your place in every comic you read."
+publish_to: 'none'
+
+# The build number is bumped by the release process; the version itself is what
+# the in-app About section shows.
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.13.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management. Riverpod 3 with plain Notifier/AsyncNotifier classes:
+  # no code generation, so there is no build_runner step between an edit and a
+  # run.
+  flutter_riverpod: ^3.4.3
+
+  # Routing, including the deep links that verification and reset emails use.
+  go_router: ^18.1.0
+
+  # HTTP client, with the interceptor that refreshes an expired token once.
+  dio: ^5.11.1
+
+  # Token storage. On web this needs HTTPS or localhost; the embedded build is
+  # same-origin and the dev server is localhost, so both are satisfied.
+  flutter_secure_storage: ^11.2.0
+
+  # Opening the chapter in the reader.
+  url_launcher: ^6.3.3
+
+  # Cover images, so a library scroll does not refetch every cover.
+  cached_network_image: ^4.0.4
+
+  # Placeholders while covers load.
+  shimmer: ^4.0.0
+
+  # Firebase sign-in. These are inert unless the backend reports the provider as
+  # enabled: the app asks /auth/providers first and never initialises Firebase
+  # when the answer is no.
+  firebase_core: ^5.0.0
+  firebase_auth: ^7.0.0
+  # Native Google sign-in only. On web the sign-in goes through
+  # FirebaseAuth.signInWithPopup instead.
+  google_sign_in: ^7.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  # The app ships no bundled assets: covers come from the sites being read.
