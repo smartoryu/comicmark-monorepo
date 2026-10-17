@@ -209,6 +209,11 @@ func (s *Service) List(ctx context.Context, userID string, filter Filter) ([]*Bo
 	return s.repo.List(ctx, userID, filter)
 }
 
+// Count returns how many bookmarks match a filter, for a pagination total.
+func (s *Service) Count(ctx context.Context, userID string, filter Filter) (int, error) {
+	return s.repo.Count(ctx, userID, filter)
+}
+
 // Get returns one bookmark belonging to the reader.
 func (s *Service) Get(ctx context.Context, userID, id string) (*Bookmark, error) {
 	return s.repo.Get(ctx, userID, id)

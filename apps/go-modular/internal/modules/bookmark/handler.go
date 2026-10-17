@@ -113,7 +113,7 @@ func (h *handler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	total, err := h.service.repo.Count(r.Context(), principal.UserID)
+	total, err := h.service.Count(r.Context(), principal.UserID, filter)
 	if err != nil {
 		h.writeError(w, r, err)
 		return

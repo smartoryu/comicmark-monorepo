@@ -88,35 +88,14 @@ type Filter struct {
 // was added. The `last_read_at IS NULL` term is spelled out because SQLite only
 // grew NULLS LAST in 3.30 and this keeps the intent obvious.
 func (r *Repository) List(ctx context.Context, userID string, filter Filter) ([]*Bookmark, error) {
+	where, args := whereClause(userID, filter)
+
 	query := strings.Builder{}
-	query.WriteString(`SELECT ` + columns + ` FROM bookmarks WHERE user_id = ?`)
-	args := []any{userID}
-
-	if filter.Status != "" {
-		query.WriteString(` AND status = ?`)
-		args = append(args, string(filter.Status))
-	}
-	if term := strings.TrimSpace(filter.Query); term != "" {
-		// LIKE with a leading wildcard cannot use an index, which is fine at the
-		// scale of one reader's library. The chapter is included because a reader
-		// searching their library may well remember the chapter rather than the
-		// title.
-		query.WriteString(` AND (title LIKE ? ESCAPE '\' OR source_host LIKE ? ESCAPE '\' OR chapter LIKE ? ESCAPE '\')`)
-		pattern := "%" + escapeLike(term) + "%"
-		args = append(args, pattern, pattern, pattern)
-	}
-
+	query.WriteString(`SELECT ` + columns + ` FROM bookmarks`)
+	query.WriteString(where)
 	query.WriteString(` ORDER BY last_read_at IS NULL, last_read_at DESC, created_at DESC, id DESC`)
-
-	limit := filter.Limit
-	if limit <= 0 {
-		limit = DefaultPageSize
-	}
-	if limit > MaxPageSize {
-		limit = MaxPageSize
-	}
 	query.WriteString(` LIMIT ? OFFSET ?`)
-	args = append(args, limit, max(filter.Offset, 0))
+	args = append(args, effectiveLimit(filter), max(filter.Offset, 0))
 
 	rows, err := r.db.QueryContext(ctx, query.String(), args...)
 	if err != nil {
@@ -138,15 +117,57 @@ func (r *Repository) List(ctx context.Context, userID string, filter Filter) ([]
 	return out, nil
 }
 
-// Count returns how many bookmarks a reader has, for a pagination total.
-func (r *Repository) Count(ctx context.Context, userID string) (int, error) {
+// Count returns how many bookmarks match a filter.
+//
+// It takes the same filter as List on purpose: a total that ignored the filter
+// would disagree with the page it describes, and a client paging through a
+// filtered library would either stop early or loop forever.
+func (r *Repository) Count(ctx context.Context, userID string, filter Filter) (int, error) {
+	where, args := whereClause(userID, filter)
+
 	var total int
 	err := r.db.QueryRowContext(ctx,
-		`SELECT COUNT(*) FROM bookmarks WHERE user_id = ?`, userID).Scan(&total)
+		`SELECT COUNT(*) FROM bookmarks`+where, args...).Scan(&total)
 	if err != nil {
 		return 0, fmt.Errorf("bookmark: count: %w", err)
 	}
 	return total, nil
+}
+
+// whereClause builds the predicate shared by List and Count, so the two can
+// never drift apart.
+func whereClause(userID string, filter Filter) (string, []any) {
+	clause := strings.Builder{}
+	clause.WriteString(` WHERE user_id = ?`)
+	args := []any{userID}
+
+	if filter.Status != "" {
+		clause.WriteString(` AND status = ?`)
+		args = append(args, string(filter.Status))
+	}
+	if term := strings.TrimSpace(filter.Query); term != "" {
+		// LIKE with a leading wildcard cannot use an index, which is fine at the
+		// scale of one reader's library. The chapter is included because a reader
+		// searching their library may well remember the chapter rather than the
+		// title.
+		clause.WriteString(` AND (title LIKE ? ESCAPE '\' OR source_host LIKE ? ESCAPE '\' OR chapter LIKE ? ESCAPE '\')`)
+		pattern := "%" + escapeLike(term) + "%"
+		args = append(args, pattern, pattern, pattern)
+	}
+
+	return clause.String(), args
+}
+
+// effectiveLimit resolves the page size a request will actually use.
+func effectiveLimit(filter Filter) int {
+	limit := filter.Limit
+	if limit <= 0 {
+		return DefaultPageSize
+	}
+	if limit > MaxPageSize {
+		return MaxPageSize
+	}
+	return limit
 }
 
 // Update writes the mutable fields of a bookmark.

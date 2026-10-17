@@ -1,0 +1,105 @@
+# https://moonrepo.dev/docs/config/project
+# yaml-language-server: $schema=https://moonrepo.dev/schemas/v2/project.json
+$schema: 'https://moonrepo.dev/schemas/v2/project.json'
+
+layer: application
+language: go
+# default: null means the project uses the Go version pinned in
+# .moon/toolchains.yml rather than a per-project override.
+toolchains:
+    default: null
+stack: backend
+tags: ['app', 'backend']
+
+project:
+    title: 'go-modular'
+    description: 'ComicMark API: modular monolith on net/http with SQLite'
+
+tasks:
+    # Restarts on a Go or SQL edit, and applies migrations so a schema change is
+    # picked up without a manual step.
+    dev:
+        command: 'watchexec -r -e go,sql -w . -- go run ./apps/api'
+        args: ['--auto-migrate']
+        deps: ['kill-port', 'tidy']
+        options:
+            cache: false
+            envFile: '.env'
+
+    run:
+        command: 'go run ./apps/api'
+        args: ['--auto-migrate']
+        deps: ['kill-port', 'tidy']
+        options:
+            cache: false
+            interactive: true
+            envFile: '.env'
+
+    # No --auto-migrate: applying schema changes should be a deliberate step
+    # outside development.
+    serve:
+        command: 'go run ./apps/api'
+        deps: ['tidy']
+        options:
+            cache: false
+            outputStyle: 'stream'
+            envFile: '.env'
+
+    build:
+        command: 'go build -trimpath -o build/comicmark-api ./apps/api'
+        deps: ['tidy']
+        options:
+            cache: false
+            envFile: '.env'
+
+    # The end-to-end script starts its own server on a throwaway database, so it
+    # needs neither this project's .env nor a running database.
+    e2e:
+        command: 'bash $workspaceRoot/scripts/e2e.sh'
+        deps: ['tidy']
+        options:
+            cache: false
+            outputStyle: 'stream'
+            runFromWorkspaceRoot: true
+
+    test:
+        command: 'go test ./... -count 1 -timeout 300s'
+        deps: ['tidy']
+        options:
+            cache: false
+            outputStyle: 'stream'
+            runFromWorkspaceRoot: false
+
+    # -race is worth the slower run: the HTTP layer and the rate limiter are
+    # concurrent by nature.
+    test-race:
+        command: 'go test ./... -count 1 -race -timeout 600s'
+        deps: ['tidy']
+        options:
+            cache: false
+            outputStyle: 'stream'
+            runFromWorkspaceRoot: false
+
+    lint:
+        command: 'go vet ./...'
+        options:
+            cache: false
+
+    format:
+        command: 'gofmt -s -w $projectRoot'
+        options:
+            cache: false
+
+    tidy:
+        command: 'go mod tidy'
+        options:
+            cache: false
+
+    kill-port:
+        # A leftover server holding the port turns into a confusing "address
+        # already in use", so it is cleared before starting.
+        command: 'pnpm --package=kill-port-process-cli dlx kill-port 8080'
+        options:
+            internal: true
+            outputStyle: 'none'
+            cache: false

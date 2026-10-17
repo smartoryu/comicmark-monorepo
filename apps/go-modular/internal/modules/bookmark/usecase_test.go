@@ -406,9 +406,38 @@ func TestListPaginates(t *testing.T) {
 	clamped := mustList(t, svc, Filter{Limit: 10_000})
 	assert.Len(t, clamped, 5)
 
-	total, err := svc.repo.Count(ctx, readerID)
+	total, err := svc.Count(ctx, readerID, Filter{})
 	require.NoError(t, err)
 	assert.Equal(t, 5, total)
+}
+
+// The total must describe the filtered list, or a client paging through a
+// filtered library would stop early or loop.
+func TestCountHonoursTheFilter(t *testing.T) {
+	svc := newTestService(t, nil)
+	ctx := context.Background()
+
+	mustCreate(t, svc, createInput("One Piece", "https://mangareader.example/1", "Chapter 1", floatPointer(1)))
+
+	paused := createInput("Berserk", "https://othersite.example/2", "Chapter 2", floatPointer(2))
+	paused.Status = string(StatusPaused)
+	mustCreate(t, svc, paused)
+
+	all, err := svc.Count(ctx, readerID, Filter{})
+	require.NoError(t, err)
+	assert.Equal(t, 2, all)
+
+	reading, err := svc.Count(ctx, readerID, Filter{Status: StatusReading})
+	require.NoError(t, err)
+	assert.Equal(t, 1, reading)
+
+	searched, err := svc.Count(ctx, readerID, Filter{Query: "berserk"})
+	require.NoError(t, err)
+	assert.Equal(t, 1, searched)
+
+	// And the total agrees with the page it describes.
+	page := mustList(t, svc, Filter{Status: StatusReading})
+	assert.Equal(t, reading, len(page))
 }
 
 func TestListRejectsAnOverlongSearchTerm(t *testing.T) {
